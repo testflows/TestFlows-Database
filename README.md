@@ -1,6 +1,6 @@
 # TestFlows - Database
 
-**The connect module is still work in progress and is currently under development.
+**The database module is still work in progress and is currently under development.
 Please use it only for reference.**
 
 Minimal module to provide capabilities to work with a database.
