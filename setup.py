@@ -35,6 +35,7 @@ setup(
     license="Apache-2.0",
     packages=[
         "testflows.database",
+        "testflows.database.cli"
     ],
     zip_safe=False,
     install_requires=[
