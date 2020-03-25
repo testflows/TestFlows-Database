@@ -35,9 +35,13 @@ setup(
     license="Apache-2.0",
     packages=[
         "testflows.database",
-        "testflows.database.cli"
+        "testflows.database.cli",
+        "testflows.database.schema"
     ],
     zip_safe=False,
+    package_data={
+        "testflows.database.schema": ["*.sql"],
+    },
     install_requires=[
     ],
     extras_require={
