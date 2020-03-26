@@ -14,7 +14,7 @@
 DROP TABLE IF EXISTS messages;
 CREATE TABLE messages
 (
-    m_keyword Enum8(
+    message_keyword Enum8(
         'NONE' = 0,
         'TEST' = 1,
         'NULL' = 2,
@@ -37,8 +37,11 @@ CREATE TABLE messages
         'METRIC' = 19,
         'TICKET' = 20
     ),
-    m_hash String,
-    m_num UInt64,
+    message_hash String,
+    message_num UInt64,
+    message_stream String,
+    message_time DateTime64(6),
+    message_date Date,
     test_type Enum8 (
         'Module' = 40,
         'Suite' = 30,
@@ -62,9 +65,70 @@ CREATE TABLE messages
     test_id String,
     test_flags UInt64,
     test_cflags UInt64,
-    m_stream String,
-    m_time DateTime64(6),
-    m_date Date
+    protocol_version String,
+    framework_version String,
+    input_message String,
+    exception_message String,
+    note_message String,
+    debug_message String,
+    trace_message String,
+    user_name String,
+    user_type String,
+    user_group String,
+    user_link String,
+    user_uid String,
+    ticket_name String,
+    ticket_link String,
+    ticket_type String,
+    ticket_group String,
+    ticket_uid String,
+    value_name String,
+    value_value String,
+    value_type String,
+    value_group String,
+    value_uid String,
+    metric_name String,
+    metric_value String,
+    metric_units String,
+    metric_type String,
+    metric_group String,
+    metric_uid String,
+    result_xout UInt8,
+    result_ok UInt8,
+    result_xok UInt8,
+    result_fail UInt8,
+    result_xfail UInt8,
+    result_error UInt8,
+    result_xerror UInt8,
+    result_null UInt8,
+    result_xnull UInt8,
+    result_skip UInt8,
+    result_name String,
+    result_test String,
+    result_message String,
+    result_reason String,
+    result_metrics Nested (
+        name String,
+        value String,
+        units String,
+        type String,
+        group String,
+        uid String
+    ),
+    result_tickets Nested (
+        name String,
+        link String,
+        type String,
+        group String,
+        uid String
+    ),
+    result_values Nested (
+        name String,
+        value String,
+        type String,
+        group String,
+        uid String
+    )
 ) ENGINE = MergeTree()
-PARTITION BY toYYYYMM(m_date)
-ORDER BY (test_id, m_num);
+PARTITION BY toYYYYMM(message_date)
+ORDER BY (test_id, message_num);
