@@ -1,4 +1,4 @@
-# Copyright 2020 Vitaliy Zakaznikov, TestFlows Test Framework (http://testflows.com)
+# Copyright 2020 Katteli Inc., TestFlows Test Framework (http://testflows.com)
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,10 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-__author__ = "Vitaliy Zakaznikov (TestFlows Test Framework http://testflows.com)"
+__author__ = "Vitaliy Zakaznikov"
 __version__ = "1.3.__VERSION__"
 __license__ = f"""
-Copyright 2020 {__author__}
+Copyright 2020 Katteli Inc., TestFlows Test Framework (http://testflows.com)
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
