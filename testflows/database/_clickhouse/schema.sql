@@ -65,6 +65,60 @@ CREATE TABLE messages
     test_id String,
     test_flags UInt64,
     test_cflags UInt64,
+    test_name String,
+    test_started DateTime64(6),
+    test_flags UInt64,
+    test_uid String,
+    test_description String,
+    test_attributes Nested(
+        name String,
+        value String,
+        type String,
+        group String,
+        uid String
+    ),
+    test_requirements Nested(
+        name String,
+        version String,
+        description String,
+        link String,
+        priority String,
+        type String,
+        group String,
+        uid String
+    ),
+    test_args Nested(
+        name String,
+        value String,
+        group String,
+        type String,
+        uid String
+    ),
+    test_tags Nested(
+        value String
+    ),
+    test_users Nested(
+        name String,
+        type String,
+        group String,
+        link String,
+        uid String
+    ),
+    test_users_tags Nested(
+        object_id String,
+        value String
+    ),
+    test_users_attributes Nested(
+        object_id String,
+        name String,
+        value String,
+        type String,
+        group String,
+        uid String
+    ),
+    -- test_examples Nested(),
+    -- test_node
+    -- test_map
     protocol_version String,
     framework_version String,
     input_message String,

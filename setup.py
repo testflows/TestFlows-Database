@@ -36,13 +36,14 @@ setup(
     packages=[
         "testflows.database",
         "testflows.database.cli",
-        "testflows.database.schema"
+        "testflows.database._clickhouse"
     ],
     zip_safe=False,
     package_data={
-        "testflows.database.schema": ["*.sql"],
+        "testflows.database.clickhouse": ["*.sql"],
     },
     install_requires=[
+        "requests"
     ],
     extras_require={
         "dev": [
