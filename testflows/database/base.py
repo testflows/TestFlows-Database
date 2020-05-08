@@ -12,7 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import json
+from collections import OrderedDict
 from collections.abc import Generator
+from collections import namedtuple
 
 __all__ = [
         "Database",
@@ -23,7 +25,12 @@ __all__ = [
         "DatabaseConnectionError",
         "DatabaseQueryError",
         "DatabaseQueryNoEntries",
-        "DatabaseQueryMultipleEntries"
+        "DatabaseQueryMultipleEntries",
+        "ColumnTypes",
+        "ColumnType",
+        "Table",
+        "Column",
+        "Columns"
     ]
 
 class DatabaseError(Exception):
@@ -105,10 +112,48 @@ class DatabaseQueryResponse:
     def any(self):
         return self.data
 
+class Row(OrderedDict):
+    def __init__(self, columns):
+        self.columns = columns
+        data = [(col.name, col.type.default_value) for col in columns.values()]
+        return super(Row, self).__init__(data)
+
+    def __setitem__(self, key, value):
+        try:
+            col_name, col_index, col_type = self.columns[key]
+        except KeyError:
+            raise KeyError(f"'{key}' no such column") from None
+        value = col_type.convert(value)
+        return super().__setitem__(key, value)
+
+Column = namedtuple("Column", "name index type")
+
+class Columns(OrderedDict):
+    def __init__(self, columns):
+        return super(Columns, self).__init__(columns)
+
+class Table:
+    def __init__(self, columns):
+        self.columns = columns
+
+    def default_row(self):
+        return Row(self.columns)
+
+ColumnType = namedtuple("ColumnType", "name convert default_value")
+
+class ColumnTypes:
+    def __getitem__(self, name):
+        return getattr(self, name)()
+
 class Database:
+    column_types = ColumnTypes()
+
     def __init__(self, name, connection):
         self.name = name
         self.connection = connection
+
+    def table(self, name):
+        raise NotImplementedError
 
     def query(self, query, data=True, stream=False, params=None):
         return self.connection.io(query, data=data, stream=stream, params=params)

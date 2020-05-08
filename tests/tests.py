@@ -141,10 +141,24 @@ def database_object(self):
         from testflows.database.clickhouse import Database, DatabaseConnection
 
         with And("I create database object"):
-            conn = DatabaseConnection("localhost", "default")
+            conn = DatabaseConnection(host="localhost", database="system")
             self.context.database = Database("local", conn)
 
     query_tests(self)
+
+    with Scenario("work with table"):
+        with When("I get table"):
+            table = self.context.database.table("one")
+        with And("I get a row"):
+            row = table.default_row()
+        with Then("I check the row"):
+            assert str(row) == "Row([('dummy', '0')])", error()
+        with And("I check the values"):
+            assert list(row.values()) == ["0"], error()
+        with When("I set column value"):
+            row['dummy'] = 245
+        with Then("new column value should be set"):
+            assert list(row.values()) == ["245"], error()
 
 @TestFeature
 def database_connection_object(self):

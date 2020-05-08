@@ -16,6 +16,34 @@ import requests
 
 from testflows.database.base import *
 
+class ColumnTypes(ColumnTypes):
+    def __getitem__(self, name):
+        if "Int" in name:
+            return self.Int(name)
+        return getattr(self, name)()
+
+    @classmethod
+    def Int(cls, name):
+        def convert(i):
+            if i == 0:
+                return '0'
+            elif i == 1:
+                return '1'
+            return str(i)
+        return ColumnType(name, convert, "0")
+
+class Database(Database):
+    column_types = ColumnTypes()
+
+    def table(self, name):
+        query = f"SELECT name, type FROM system.columns WHERE table = '{name}' AND database = '{self.connection.database}'"
+        r = self.query(query).any()
+
+        if not r:
+            raise KeyError("no table")
+        columns = Columns([(entry["name"], Column(entry["name"], idx, self.column_types[entry["type"]])) for idx, entry in enumerate(r)])
+        return Table(columns)
+
 class DatabaseConnection(DatabaseConnection):
     def __init__(self, host, database, user=None, password=None, port=8123):
         self.host = host
@@ -60,10 +88,3 @@ class DatabaseConnection(DatabaseConnection):
         if stream:
             return DatabaseQueryStreamResponse(r, convert=json.loads)
         return DatabaseQueryResponse(r, convert = lambda r : json.loads(f"[{','.join(r.text.splitlines())}]"))
-
-
-
-
-
-
-
