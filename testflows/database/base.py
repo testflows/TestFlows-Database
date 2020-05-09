@@ -112,23 +112,39 @@ class DatabaseQueryResponse:
     def any(self):
         return self.data
 
-class Row(OrderedDict):
-    def __init__(self, columns):
+class Row:
+    def __init__(self, columns, default_data=None):
         self.columns = columns
-        data = [(col.name, col.type.default_value) for col in columns.values()]
-        self._init = True
-        super(Row, self).__init__(data)
-        self._init = False
+        if default_data is None:
+            default_data = self.default_data(columns)
+        self.data = OrderedDict(default_data)
+
+    @classmethod
+    def default_data(cls, columns):
+        return [(col.name, col.type.default_value) for col in columns.values()]
+
+    def __str__(self):
+        return f'Row{str(self.data).lstrip("OrderedDict")}'
+
+    def __repr__(self):
+        return f'Row{repr(self.data).lstrip("OrderedDict")}'
+
+    def values(self):
+        return self.data.values()
+
+    def keys(self):
+        return self.data.keys()
+
+    def __getitem__(self, index):
+        return self.data[index]
 
     def __setitem__(self, key, value):
-        if self._init:
-            return super().__setitem__(key, value)
         try:
             col_name, col_index, col_type = self.columns[key]
         except KeyError:
             raise KeyError(f"'{key}' no such column") from None
         value = col_type.convert(value)
-        return super().__setitem__(key, value)
+        self.data[key] = value
 
 Column = namedtuple("Column", "name index type")
 
@@ -139,9 +155,10 @@ class Columns(OrderedDict):
 class Table:
     def __init__(self, columns):
         self.columns = columns
+        self.row_default_data = Row.default_data(columns)
 
     def default_row(self):
-        return Row(self.columns)
+        return Row(self.columns, default_data=self.row_default_data)
 
 ColumnType = namedtuple("ColumnType", "name convert default_value")
 

@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import uuid
+import time
 import datetime
 
 from collections import namedtuple
@@ -273,6 +274,27 @@ def database_object(self):
             row["message_num"] = 100
         with Then("check new value was set"):
             assert row["message_num"] == '100', error()
+
+        with When("I create many rows"):
+            start_time = time.time()
+            for i in range(100000):
+                table.default_row()
+            delta = time.time() - start_time
+
+        metric("create_100k_rows_time", value=delta, units="sec")
+        with Then("it should not take too long"):
+            assert delta < 3, error()
+
+        with When("make sure rows can store different data"):
+            with By("creating two rows"):
+                row1 = table.default_row()
+                row2 = table.default_row()
+            with And("setting the same column to different values"):
+                row1["test_attributes.name"] = ["attr1"]
+                row2["test_attributes.name"] = ["attr2"]
+            with Then("values of the column should not change"):
+                assert row1["test_attributes.name"] == "['attr1']", error()
+                assert row2["test_attributes.name"] == "['attr2']", error()
 
 
 @TestFeature

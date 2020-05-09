@@ -45,6 +45,7 @@ schema = [
     message_time DateTime64(6),   
     message_date Date,
     test_type Enum8 (
+        'None' = 0,
         'Module' = 40,
         'Suite' = 30,
         'Test' = 20,
@@ -62,7 +63,7 @@ schema = [
         'But' = 7,
         'By' = 6,
         'Finally' = 5,
-        'Empty' = 0
+        'None' = 0
     ),
     test_id String,
     test_flags UInt64,
