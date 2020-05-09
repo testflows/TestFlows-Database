@@ -133,10 +133,8 @@ def query_tests(self):
     with Scenario("check streaming"):
         with When("I run a query that returns large number of entries with stream mode"):
             r = query("SELECT number FROM system.numbers LIMIT 10000", data=True, stream=True)
-
         with And("I consume the entries"):
             data = [entry for entry in r]
-
         with Then("entries should match the expected"):
             assert data[0] == {"number":"0"}, error()
             assert data[-1] == {"number":"9999"}, error()
@@ -178,16 +176,17 @@ def database_object(self):
     with Scenario("use table"):
         with When("I get table"):
             table = self.context.database.table("one")
-        with And("I get a row"):
-            row = table.default_row()
-        with Then("I check the row"):
-            assert str(row) == "Row([('dummy', '0')])", error()
-        with And("I check the values"):
-            assert list(row.values()) == ["0"], error()
+            with And("I get a row"):
+                row = table.default_row()
+            with Then("I check the row"):
+                assert str(row) == "Row([('dummy', '0')])", error()
+            with And("I check the values"):
+                assert list(row.values()) == ["0"], error()
+
         with When("I set column value"):
             row['dummy'] = 245
-        with Then("new column value should be set"):
-            assert list(row.values()) == ["245"], error()
+            with Then("new column value should be set"):
+                assert list(row.values()) == ["245"], error()
 
     with Scenario("check types") as self:
         table_name = "supported_types"
@@ -219,42 +218,44 @@ def database_object(self):
         with And("I get a row"):
             row = table.default_row()
 
-        with When("I set Int8 column"):
-            row["int"] = -5
-        with And("UInt64 column"):
-            row["uint"] = 6
-        with And("Float64 column"):
-            row["float"] = 12234.22345
-        with And("String column"):
-            row["str"] = "hello\nthere\t\bvoo"
-        with And("Date column"):
-            row["date"] = datetime.datetime(2020,1,1)
-        with And("DateTime column"):
-            row["dt"] = datetime.datetime(2020,1,1)
-        with And("DateTime64 column"):
-            row["dt64"] = datetime.datetime(2020,1,1)
-        with And("Array(Int8) column"):
-            row["a_int"] = [8,5,68]
-        with And("Enum8 column"):
-            row["enum"] = "two"
-        with And("Nested column"):
-            row["nested.str"] = ["hello"]
-            row["nested.int"] = [123]
+        with When("I set columns of types"):
+            with By("setting Int8 column"):
+                row["int"] = -5
+            with And("UInt64 column"):
+                row["uint"] = 6
+            with And("Float64 column"):
+                row["float"] = 12234.22345
+            with And("String column"):
+                row["str"] = "hello\nthere\t\bvoo"
+            with And("Date column"):
+                row["date"] = datetime.datetime(2020,1,1)
+            with And("DateTime column"):
+                row["dt"] = datetime.datetime(2020,1,1)
+            with And("DateTime64 column"):
+                row["dt64"] = datetime.datetime(2020,1,1)
+            with And("Array(Int8) column"):
+                row["a_int"] = [8,5,68]
+            with And("Enum8 column"):
+                row["enum"] = "two"
+            with And("Nested column"):
+                row["nested.str"] = ["hello"]
+                row["nested.int"] = [123]
 
         with When("I insert the row into the table"):
             values = ",".join(row.values())
             note(values)
             query(f"INSERT INTO {table_name} VALUES ({values})")
 
-        with And("I read the row back"):
-            r = query(f"SELECT * FROM {table_name}").one()
-        with Then("data should match"):
-            expected = {'int': -5, 'uint': '6',
-                'float': 2234.2234, 'str': 'hello\nthere\t\x08voo',
-                'date': '2020-01-01', 'dt': '2020-01-01 00:00:00',
-                'dt64': '2020-01-01 00:00:00.000', 'a_int': [8, 5, 68],
-                'enum': 'two', 'nested.str': ['hello'], 'nested.int': [123]}
-            assert r == expected, error()
+            with And("I read the row back"):
+                r = query(f"SELECT * FROM {table_name}").one()
+
+            with Then("data should match"):
+                expected = {'int': -5, 'uint': '6',
+                    'float': 2234.2234, 'str': 'hello\nthere\t\x08voo',
+                    'date': '2020-01-01', 'dt': '2020-01-01 00:00:00',
+                    'dt64': '2020-01-01 00:00:00.000', 'a_int': [8, 5, 68],
+                    'enum': 'two', 'nested.str': ['hello'], 'nested.int': [123]}
+                assert r == expected, error()
 
     with Scenario("use schema") as self:
         with Given("I have a database"):
