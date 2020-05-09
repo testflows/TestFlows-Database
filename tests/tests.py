@@ -12,6 +12,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import uuid
+
 from testflows.core import *
 from testflows.asserts import error, raises
 
@@ -159,6 +161,42 @@ def database_object(self):
             row['dummy'] = 245
         with Then("new column value should be set"):
             assert list(row.values()) == ["245"], error()
+
+    with Scenario("work with messages") as self:
+        database_name = f'test_{uuid.uuid1()}'.replace("-", "")
+
+        def callback():
+            with Finally("I drop the database"):
+                if "database" in self.context:
+                    self.context.database.query(f"DROP DATABASE IF EXISTS {database_name}", data=False)
+
+        self.context.cleanup(callback)
+
+        with Given("I setup the database"):
+            with By("creating database object"):
+                conn = DatabaseConnection(host="localhost", database="default")
+                db = Database("local", conn)
+                self.context.database = db
+
+            with And("creating a test database"):
+                db.query(f"DROP DATABASE IF EXISTS {database_name}", data=False)
+                db.query(f"CREATE DATABASE {database_name}", data=False)
+                db.connection.database = database_name
+                db.connection.reset()
+
+            with And("loading schema"):
+                from testflows.database.clickhouse import schema
+                for query in schema:
+                    db.query(query, data=False)
+
+        with When("I get messages table"):
+            table = self.context.database.table("messages")
+        with And("I get a row"):
+            row = table.default_row()
+        with And("I set column value"):
+            row["message_num"] = 100
+        with Then("check new value was set"):
+            assert row["message_num"] == '100', error()
 
 @TestFeature
 def database_connection_object(self):

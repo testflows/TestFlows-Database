@@ -1,18 +1,20 @@
--- Copyright 2020 Katteli Inc., TestFlows Test Framework (http://testflows.com)
---
--- Licensed under the Apache License, Version 2.0 (the "License");
--- you may not use this file except in compliance with the License.
--- You may obtain a copy of the License at
---
---     http://www.apache.org/licenses/LICENSE-2.0
---
--- Unless required by applicable law or agreed to in writing, software
--- distributed under the License is distributed on an "AS IS" BASIS,
--- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
--- See the License for the specific language governing permissions and
--- limitations under the License.
-DROP TABLE IF EXISTS messages;
-CREATE TABLE messages
+#!/usr/bin/env python3
+# Copyright 2020 Katteli Inc., TestFlows Test Framework (http://testflows.com)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+schema = [
+"DROP TABLE IF EXISTS messages",
+"""CREATE TABLE messages
 (
     message_keyword Enum8(
         'NONE' = 0,
@@ -40,7 +42,7 @@ CREATE TABLE messages
     message_hash String,
     message_num UInt64,
     message_stream String,
-    message_time DateTime64(6),
+    message_time DateTime64(6),   
     message_date Date,
     test_type Enum8 (
         'Module' = 40,
@@ -67,7 +69,6 @@ CREATE TABLE messages
     test_cflags UInt64,
     test_name String,
     test_started DateTime64(6),
-    test_flags UInt64,
     test_uid String,
     test_description String,
     test_attributes Nested(
@@ -185,4 +186,8 @@ CREATE TABLE messages
     )
 ) ENGINE = MergeTree()
 PARTITION BY toYYYYMM(message_date)
-ORDER BY (test_id, message_num);
+ORDER BY (test_id, message_num)"""
+]
+
+if __name__ == "__main__":
+    print(";\n".join(schema))

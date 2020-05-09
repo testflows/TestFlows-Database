@@ -13,6 +13,7 @@
 # limitations under the License.
 import json
 import requests
+import datetime
 
 from testflows.database.base import *
 
@@ -20,6 +21,18 @@ class ColumnTypes(ColumnTypes):
     def __getitem__(self, name):
         if "Int" in name:
             return self.Int(name)
+        elif "Float" in name:
+            return self.Float(name)
+        elif name.startswith("Enum"):
+            return self.Enum(name)
+        elif name.startswith("Array"):
+            type_name = name.split("(")[-1].strip("()")
+            return self.Array(name, self[type_name].convert)
+        elif name == "String":
+            return self.String(name)
+        elif name.startswith("DateTime64"):
+            precision = name.split("(")[-1].split(",", 1)[0].strip("()")
+            return self.DateTime64(name, precision)
         return getattr(self, name)()
 
     @classmethod
@@ -31,6 +44,48 @@ class ColumnTypes(ColumnTypes):
                 return '1'
             return str(i)
         return ColumnType(name, convert, "0")
+
+    @classmethod
+    def Float(cls, name):
+        def convert(f):
+            return repr(f)[1:-1]
+        return ColumnType(name, convert, "0")
+
+    @classmethod
+    def String(cls, name):
+        def convert(s):
+            if not s:
+                return "''"
+            return f"'{json.dumps(s)[1:-1]}'"
+        return ColumnType(name, convert, "''")
+
+    @classmethod
+    def Enum(cls, name):
+        return cls.String(name)
+
+    @classmethod
+    def Array(cls, name, type_convert):
+        def convert(l):
+            return f"[{','.join([type_convert(e) for e in l])}]"
+        return ColumnType(name, convert, "[]")
+
+    @classmethod
+    def Date(cls):
+        def convert(d):
+            return f"'{d.strftime('%Y-%m-%d')}'"
+        return ColumnType('Date', convert, '')
+
+    @classmethod
+    def DateTime(cls):
+        def convert(d):
+            return f"'{d.strftime('%Y-%m-%d %H:%M:%S')}'"
+        return ColumnType('DateTime', convert, '')
+
+    @classmethod
+    def DateTime64(cls, name, precision):
+        def convert(d):
+            return f"%.{precision}f" % d.timestamp()
+        return ColumnType(name, convert, '')
 
 class Database(Database):
     column_types = ColumnTypes()
@@ -52,13 +107,21 @@ class DatabaseConnection(DatabaseConnection):
         self.password = password
         self.port = port
         self.session = requests.Session()
+        self.init()
+        super(DatabaseConnection, self).__init__()
+
+    def init(self):
         self.url = f"http://{self.host}:{self.port}/"
         self.default_params = {
             "user": self.user,
             "password": self.password,
             "database": self.database
         }
-        super(DatabaseConnection, self).__init__()
+
+    def reset(self):
+        self.close()
+        self.init()
+        self.open()
 
     def open(self):
         pass

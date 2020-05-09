@@ -116,9 +116,13 @@ class Row(OrderedDict):
     def __init__(self, columns):
         self.columns = columns
         data = [(col.name, col.type.default_value) for col in columns.values()]
-        return super(Row, self).__init__(data)
+        self._init = True
+        super(Row, self).__init__(data)
+        self._init = False
 
     def __setitem__(self, key, value):
+        if self._init:
+            return super().__setitem__(key, value)
         try:
             col_name, col_index, col_type = self.columns[key]
         except KeyError:

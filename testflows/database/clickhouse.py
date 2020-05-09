@@ -12,3 +12,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from testflows.database._clickhouse.database import *
+from testflows.database._clickhouse.schema import schema

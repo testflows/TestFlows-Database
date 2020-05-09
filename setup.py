@@ -40,7 +40,6 @@ setup(
     ],
     zip_safe=False,
     package_data={
-        "testflows.database.clickhouse": ["*.sql"],
     },
     install_requires=[
         "requests"
