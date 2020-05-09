@@ -168,7 +168,7 @@ def database_object(self):
         def callback():
             with Finally("I drop the database"):
                 if "database" in self.context:
-                    self.context.database.query(f"DROP DATABASE IF EXISTS {database_name}", data=False)
+                    query(f"DROP DATABASE IF EXISTS {database_name}")
 
         self.context.cleanup(callback)
 
@@ -179,15 +179,15 @@ def database_object(self):
                 self.context.database = db
 
             with And("creating a test database"):
-                db.query(f"DROP DATABASE IF EXISTS {database_name}", data=False)
-                db.query(f"CREATE DATABASE {database_name}", data=False)
+                query(f"DROP DATABASE IF EXISTS {database_name}")
+                query(f"CREATE DATABASE {database_name}")
                 db.connection.database = database_name
                 db.connection.reset()
 
             with And("loading schema"):
                 from testflows.database.clickhouse import schema
-                for query in schema:
-                    db.query(query, data=False)
+                for statement in schema:
+                    query(statement)
 
         with When("I get messages table"):
             table = self.context.database.table("messages")

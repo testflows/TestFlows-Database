@@ -17,6 +17,7 @@ import datetime
 
 from testflows.database.base import *
 
+
 class ColumnTypes(ColumnTypes):
     def __getitem__(self, name):
         if "Int" in name:
@@ -43,12 +44,14 @@ class ColumnTypes(ColumnTypes):
             elif i == 1:
                 return '1'
             return str(i)
+
         return ColumnType(name, convert, "0")
 
     @classmethod
     def Float(cls, name):
         def convert(f):
             return repr(f)[1:-1]
+
         return ColumnType(name, convert, "0")
 
     @classmethod
@@ -57,6 +60,7 @@ class ColumnTypes(ColumnTypes):
             if not s:
                 return "''"
             return f"'{json.dumps(s)[1:-1]}'"
+
         return ColumnType(name, convert, "''")
 
     @classmethod
@@ -67,25 +71,30 @@ class ColumnTypes(ColumnTypes):
     def Array(cls, name, type_convert):
         def convert(l):
             return f"[{','.join([type_convert(e) for e in l])}]"
+
         return ColumnType(name, convert, "[]")
 
     @classmethod
     def Date(cls):
         def convert(d):
             return f"'{d.strftime('%Y-%m-%d')}'"
+
         return ColumnType('Date', convert, '')
 
     @classmethod
     def DateTime(cls):
         def convert(d):
             return f"'{d.strftime('%Y-%m-%d %H:%M:%S')}'"
+
         return ColumnType('DateTime', convert, '')
 
     @classmethod
     def DateTime64(cls, name, precision):
         def convert(d):
             return f"%.{precision}f" % d.timestamp()
+
         return ColumnType(name, convert, '')
+
 
 class Database(Database):
     column_types = ColumnTypes()
@@ -96,8 +105,11 @@ class Database(Database):
 
         if not r:
             raise KeyError("no table")
-        columns = Columns([(entry["name"], Column(entry["name"], idx, self.column_types[entry["type"]])) for idx, entry in enumerate(r)])
+        columns = Columns(
+            [(entry["name"], Column(entry["name"], idx, self.column_types[entry["type"]])) for idx, entry in
+             enumerate(r)])
         return Table(columns)
+
 
 class DatabaseConnection(DatabaseConnection):
     def __init__(self, host, database, user=None, password=None, port=8123):
@@ -130,6 +142,15 @@ class DatabaseConnection(DatabaseConnection):
         self.session.close()
 
     def io(self, query, data=False, stream=False, params=None):
+        if data is None:
+            if query.startswith(("INSERT", "CREATE", "DROP",
+                    "SYSTEM", "ALTER", "GRANT", "REVOKE", "ATTACH",
+                    "DETACH", "KILL", "SET", "USE", "OPTIMIZE",
+                    "RENAME", "TRUNCATE", "PROFILE")):
+                data = False
+            else:
+                data = True
+
         if data:
             query += " FORMAT JSONEachRow"
 
@@ -150,4 +171,4 @@ class DatabaseConnection(DatabaseConnection):
 
         if stream:
             return DatabaseQueryStreamResponse(r, convert=json.loads)
-        return DatabaseQueryResponse(r, convert = lambda r : json.loads(f"[{','.join(r.text.splitlines())}]"))
+        return DatabaseQueryResponse(r, convert=lambda r: json.loads(f"[{','.join(r.text.splitlines())}]"))

@@ -159,5 +159,5 @@ class Database:
     def table(self, name):
         raise NotImplementedError
 
-    def query(self, query, data=True, stream=False, params=None):
+    def query(self, query, data=None, stream=False, params=None):
         return self.connection.io(query, data=data, stream=stream, params=params)
