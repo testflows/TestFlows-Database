@@ -13,13 +13,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import uuid
+import datetime
+
+from collections import namedtuple
 
 from testflows.core import *
 from testflows.asserts import error, raises
 
 def query(query, **kwargs):
     self = current()
-    with By("executing query", description=f"{query} with {kwargs} options"):
+    with By("executing query", description=f"{query.strip()}\nwith {kwargs} options"):
         if "database" in self.context:
             return self.context.database.query(query, **kwargs)
         elif "connection" in self.context:
@@ -137,6 +140,29 @@ def query_tests(self):
             assert data[0] == {"number":"0"}, error()
             assert data[-1] == {"number":"9999"}, error()
 
+@TestStep
+def creating_test_database(self):
+    database_name = f'test_{uuid.uuid1()}'.replace("-", "")
+
+    def callback():
+        with Finally("I drop the database"):
+            if "database" in self.context:
+                query(f"DROP DATABASE IF EXISTS {database_name}")
+
+    self.context.cleanup(callback)
+
+    with By("creating database object"):
+        from testflows.database.clickhouse import Database, DatabaseConnection
+        conn = DatabaseConnection(host="localhost", database="default")
+        db = Database("local", conn)
+        self.context.database = db
+
+    with And("creating a test database"):
+        query(f"DROP DATABASE IF EXISTS {database_name}")
+        query(f"CREATE DATABASE {database_name}")
+        db.connection.database = database_name
+        db.connection.reset()
+
 @TestFeature
 def database_object(self):
     with Given("I import objects"):
@@ -148,7 +174,7 @@ def database_object(self):
 
     query_tests(self)
 
-    with Scenario("work with table"):
+    with Scenario("use table"):
         with When("I get table"):
             table = self.context.database.table("one")
         with And("I get a row"):
@@ -162,27 +188,76 @@ def database_object(self):
         with Then("new column value should be set"):
             assert list(row.values()) == ["245"], error()
 
-    with Scenario("work with messages") as self:
-        database_name = f'test_{uuid.uuid1()}'.replace("-", "")
+    with Scenario("check types") as self:
+        table_name = "supported_types"
+        Column = namedtuple("Column", "name type")
 
-        def callback():
-            with Finally("I drop the database"):
-                if "database" in self.context:
-                    query(f"DROP DATABASE IF EXISTS {database_name}")
+        columns = [
+            Column("int", "Int8"),
+            Column("uint", "UInt64"),
+            Column("float", "Float64"),
+            Column("str", "String"),
+            Column("date", "Date"),
+            Column("dt", "DateTime"),
+            Column("dt64", "DateTime64"),
+            Column("a_int", "Array(Int8)"),
+            Column("enum", "Enum8(''=10, 'zero'=0, 'one'=1, 'two'=2)"),
+            Column("nested", "Nested(str String, int Int8)")
+        ]
 
-        self.context.cleanup(callback)
+        with Given("I have a database"):
+            By(creating_test_database)
 
-        with Given("I setup the database"):
-            with By("creating database object"):
-                conn = DatabaseConnection(host="localhost", database="default")
-                db = Database("local", conn)
-                self.context.database = db
+            with And("creating a table that uses all the supported types"):
+                query(f"CREATE TABLE {table_name} (\n"
+                    + ",\n".join(["    %s %s" % (col.name, col.type) for col in columns])
+                    + "\n) ENGINE = Memory()")
 
-            with And("creating a test database"):
-                query(f"DROP DATABASE IF EXISTS {database_name}")
-                query(f"CREATE DATABASE {database_name}")
-                db.connection.database = database_name
-                db.connection.reset()
+        with When("I get table"):
+            table = self.context.database.table(table_name)
+        with And("I get a row"):
+            row = table.default_row()
+
+        with When("I set Int8 column"):
+            row["int"] = -5
+        with And("UInt64 column"):
+            row["uint"] = 6
+        with And("Float64 column"):
+            row["float"] = 12234.22345
+        with And("String column"):
+            row["str"] = "hello\nthere\t\bvoo"
+        with And("Date column"):
+            row["date"] = datetime.datetime(2020,1,1)
+        with And("DateTime column"):
+            row["dt"] = datetime.datetime(2020,1,1)
+        with And("DateTime64 column"):
+            row["dt64"] = datetime.datetime(2020,1,1)
+        with And("Array(Int8) column"):
+            row["a_int"] = [8,5,68]
+        with And("Enum8 column"):
+            row["enum"] = "two"
+        with And("Nested column"):
+            row["nested.str"] = ["hello"]
+            row["nested.int"] = [123]
+
+        with When("I insert the row into the table"):
+            values = ",".join(row.values())
+            note(values)
+            query(f"INSERT INTO {table_name} VALUES ({values})")
+
+        with And("I read the row back"):
+            r = query(f"SELECT * FROM {table_name}").one()
+        with Then("data should match"):
+            expected = {'int': -5, 'uint': '6',
+                'float': 2234.2234, 'str': 'hello\nthere\t\x08voo',
+                'date': '2020-01-01', 'dt': '2020-01-01 00:00:00',
+                'dt64': '2020-01-01 00:00:00.000', 'a_int': [8, 5, 68],
+                'enum': 'two', 'nested.str': ['hello'], 'nested.int': [123]}
+            assert r == expected, error()
+
+    with Scenario("use schema") as self:
+        with Given("I have a database"):
+            By(creating_test_database)
 
             with And("loading schema"):
                 from testflows.database.clickhouse import schema
@@ -193,10 +268,12 @@ def database_object(self):
             table = self.context.database.table("messages")
         with And("I get a row"):
             row = table.default_row()
-        with And("I set column value"):
+
+        with When("I set column value"):
             row["message_num"] = 100
         with Then("check new value was set"):
             assert row["message_num"] == '100', error()
+
 
 @TestFeature
 def database_connection_object(self):

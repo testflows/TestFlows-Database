@@ -20,15 +20,15 @@ from testflows.database.base import *
 
 class ColumnTypes(ColumnTypes):
     def __getitem__(self, name):
-        if "Int" in name:
+        if name.startswith("Array"):
+            type_name = name.split("(")[-1].strip("()")
+            return self.Array(name, self[type_name].convert)
+        elif "Int" in name:
             return self.Int(name)
         elif "Float" in name:
             return self.Float(name)
         elif name.startswith("Enum"):
             return self.Enum(name)
-        elif name.startswith("Array"):
-            type_name = name.split("(")[-1].strip("()")
-            return self.Array(name, self[type_name].convert)
         elif name == "String":
             return self.String(name)
         elif name.startswith("DateTime64"):
@@ -79,21 +79,21 @@ class ColumnTypes(ColumnTypes):
         def convert(d):
             return f"'{d.strftime('%Y-%m-%d')}'"
 
-        return ColumnType('Date', convert, '')
+        return ColumnType('Date', convert, '0')
 
     @classmethod
     def DateTime(cls):
         def convert(d):
             return f"'{d.strftime('%Y-%m-%d %H:%M:%S')}'"
 
-        return ColumnType('DateTime', convert, '')
+        return ColumnType('DateTime', convert, '0')
 
     @classmethod
     def DateTime64(cls, name, precision):
         def convert(d):
             return f"%.{precision}f" % d.timestamp()
 
-        return ColumnType(name, convert, '')
+        return ColumnType(name, convert, '0')
 
 
 class Database(Database):
