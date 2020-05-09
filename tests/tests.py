@@ -272,8 +272,8 @@ def database_object(self):
 
         with When("I set column value"):
             row["message_num"] = 100
-        with Then("check new value was set"):
-            assert row["message_num"] == '100', error()
+            with Then("check new value was set"):
+                assert row["message_num"] == '100', error()
 
         with When("I create many rows"):
             start_time = time.time()
@@ -281,11 +281,11 @@ def database_object(self):
                 table.default_row()
             delta = time.time() - start_time
 
-        metric("create_100k_rows_time", value=delta, units="sec")
-        with Then("it should not take too long"):
-            assert delta < 3, error()
+            metric("create_100k_rows_time", value=delta, units="sec")
+            with Then("it should not take too long"):
+                assert delta < 3, error()
 
-        with When("make sure rows can store different data"):
+        with When("I make sure rows can store different data"):
             with By("creating two rows"):
                 row1 = table.default_row()
                 row2 = table.default_row()
