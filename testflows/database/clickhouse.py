@@ -1,4 +1,5 @@
-# Copyright 2020 Katteli Inc., TestFlows Test Framework (http://testflows.com)
+# Copyright 2020 Katteli Inc.
+# TestFlows Test Framework (http://testflows.com)
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,3 +14,4 @@
 # limitations under the License.
 from testflows.database._clickhouse.database import *
 from testflows.database._clickhouse.schema import schema
+from testflows.database._clickhouse.transform import transform

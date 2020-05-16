@@ -1,4 +1,5 @@
-# Copyright 2020 Katteli Inc., TestFlows Test Framework (http://testflows.com)
+# Copyright 2020 Katteli Inc.
+# TestFlows Test Framework (http://testflows.com)
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -65,7 +66,14 @@ class ColumnTypes(ColumnTypes):
 
     @classmethod
     def Enum(cls, name):
-        return cls.String(name)
+        def convert(e):
+            if type(e) is int:
+                return str(e)
+            if not e:
+                return "''"
+            return f"'{json.dumps(e)[1:-1]}'"
+
+        return ColumnType(name, convert, "''")
 
     @classmethod
     def Array(cls, name, type_convert):
@@ -108,7 +116,7 @@ class Database(Database):
         columns = Columns(
             [(entry["name"], Column(entry["name"], idx, self.column_types[entry["type"]])) for idx, entry in
              enumerate(r)])
-        return Table(columns)
+        return Table(name, self.connection.database, columns)
 
 
 class DatabaseConnection(DatabaseConnection):

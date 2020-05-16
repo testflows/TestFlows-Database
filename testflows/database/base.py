@@ -1,4 +1,5 @@
-# Copyright 2020 Katteli Inc., TestFlows Test Framework (http://testflows.com)
+# Copyright 2020 Katteli Inc.
+# TestFlows Test Framework (http://testflows.com)
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -138,12 +139,13 @@ class Row:
     def __getitem__(self, index):
         return self.data[index]
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key, value, raw=False):
         try:
             col_name, col_index, col_type = self.columns[key]
         except KeyError:
             raise KeyError(f"'{key}' no such column") from None
-        value = col_type.convert(value)
+        if not raw:
+            value = col_type.convert(value)
         self.data[key] = value
 
 Column = namedtuple("Column", "name index type")
@@ -153,7 +155,9 @@ class Columns(OrderedDict):
         return super(Columns, self).__init__(columns)
 
 class Table:
-    def __init__(self, columns):
+    def __init__(self, name, database, columns):
+        self.name = name
+        self.database = database
         self.columns = columns
         self.row_default_data = Row.default_data(columns)
 
