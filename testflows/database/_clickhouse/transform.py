@@ -32,8 +32,10 @@ def flush(self, final=False):
         self.tasks.append(self.workers.submit(write, self.database, query))
 
     if not final:
-        for task in concurrent.futures.as_completed(self.tasks):
+        done, pending = concurrent.futures.wait(self.tasks, return_when=concurrent.futures.FIRST_COMPLETED)
+        for task in done:
             task.result()
+        self.tasks = list(pending)
     else:
         for task in self.tasks:
             task.result()
