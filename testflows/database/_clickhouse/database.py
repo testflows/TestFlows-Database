@@ -108,7 +108,7 @@ class Database(Database):
     column_types = ColumnTypes()
 
     def table(self, name):
-        query = f"SELECT name, type FROM system.columns WHERE table = '{name}' AND database = '{self.connection.database}'"
+        query = f"SELECT name, type FROM system.columns WHERE table = '{name}' AND database = '{self.connection.database}' and default_kind != 'MATERIALIZED'"
         r = self.query(query).any()
 
         if not r:
@@ -135,7 +135,8 @@ class DatabaseConnection(DatabaseConnection):
         self.default_params = {
             "user": self.user,
             "password": self.password,
-            "database": self.database
+            "database": self.database,
+            "input_format_null_as_default": 1
         }
 
     def reset(self):

@@ -25,9 +25,8 @@ class WriteToDatabasePipeline(Pipeline):
         stop_event = threading.Event()
 
         steps = [
-            read_transform(input, tail=tail),
-            parse_transform(stop_event),
-            write_to_database_transform(database),
+            read_transform(input, tail=tail, stop=stop_event),
+            write_to_database_transform(database, stop=stop_event),
             stop_transform(stop_event)
         ]
         super(WriteToDatabasePipeline, self).__init__(steps)

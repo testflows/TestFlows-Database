@@ -14,25 +14,32 @@
 import threading
 import concurrent.futures
 
-from testflows._core.transform.log import message
-
-def format_version(self, msg, row):
-    pass
-
-formatters = {
-    message.RawVersion: (format_version),
-}
+auto_flush_interval = 0.25
 
 def write(database, query):
     database.query(query)
 
-def flush(self):
+def flush(self, final=False):
+    self.timer.cancel()
+    query = None
+
     with self.buffer as buffer:
-        if not buffer:
-            return
-        query = f"{self.query} {','.join([''.join(['(', ','.join(row.values()), ')']) for row in buffer])}"
-        del buffer[:]
-    self.tasks.append(self.workers.submit(write, self.database, query))
+        if buffer:
+            query = f"{self.query} {' '.join(buffer)}"
+            del buffer[:]
+
+    if query:
+        self.tasks.append(self.workers.submit(write, self.database, query))
+
+    if not final:
+        for task in concurrent.futures.as_completed(self.tasks):
+            task.result()
+    else:
+        for task in self.tasks:
+            task.result()
+
+    if not final:
+        self.timer = set_timer(self)
 
 class State:
     pass
@@ -50,52 +57,36 @@ class Buffer():
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.lock.release()
 
+def set_timer(self):
+    timer = threading.Timer(auto_flush_interval, flush, (self,))
+    timer.start()
+    return timer
 
-def transform(database, table="messages"):
+def transform(database, stop, table="messages"):
     """Write to ClickHouse database.
 
     :param database: database object
+    :param stop: stop event
     :param table: table name, default: 'messages'
     """
     self = State()
     self.buffer = Buffer()
     self.database = database
     self.table = self.database.table(table)
-    self.query = f"INSERT INTO {self.table.name} ({','.join([col for col in self.table.columns])}) VALUES"
+    self.query = f"INSERT INTO {self.table.name} FORMAT JSONEachRow "
     self.tasks = []
+    self.timer = set_timer(self)
 
-    line = None
+    msg = None
     with concurrent.futures.ThreadPoolExecutor(max_workers=5) as workers:
         self.workers = workers
 
         while True:
-            if line is not None:
-                formatter = formatters.get(type(line), None)
-                #if not formatter:
-                #    continue
-                row = self.table.default_row()
-
-                #formatter(line, row)
-                row["message_num"] = line.p_num
-                row["message_keyword"] = line.p_keyword
-                row["message_hash"] = line.p_hash
-                row["message_stream"] = line.p_stream
-                # FIXME: p_time does not make senses
-                # p_time should be message_time, test_time should be relative
-                #message_time = repr(line.p_time)[1:-1]
-                #row.__setitem__("message_time",  message_time, raw=True)
-                #row.__setitem__("message_date", f"toDate({message_time})", raw=True)
-                row["test_type"] = line.p_type
-                row["test_subtype"] = line.p_subtype
-                row["test_id"] = line.p_id
-                row["test_flags"] = line.p_flags
-                row["test_cflags"] = line.p_cflags
-
+            if msg is not None:
                 with self.buffer as buffer:
-                    buffer.append(row)
+                    buffer.append(msg)
 
-                flush(self)
-                for task in concurrent.futures.as_completed(self.tasks):
-                    task.result()
+                if stop is not None and stop.is_set():
+                    flush(self, final=True)
 
-            line = yield line
+            msg = yield msg
