@@ -36,26 +36,13 @@ schema = [
         'ATTRIBUTE' = 15,
         'REQUIREMENT' = 16,
         'EXAMPLE' = 17,
-        'USER' = 18,
-        'PROJECT' = 19,
-        'ENVIRONMENT' = 20,
-        'DEVICE' = 21,
-        'SOFTWARE' = 22,
-        'HARDWARE' = 23,
-        'NODE' = 24,
-        'MAP' = 25,
-        'STOP' = 26
+        'NODE' = 18,
+        'MAP' = 19,
+        'STOP' = 20
     ),
     message_hash String,
-    message_ptype UInt16,
-    message_ptype_test UInt8 MATERIALIZED bitAnd(message_ptype, 0x1) > 0,
-    message_ptype_result UInt8 MATERIALIZED bitAnd(message_ptype, 0x2) > 0,
-    message_ptype_project UInt8 MATERIALIZED bitAnd(message_ptype, 0x4) > 0,
-    message_ptype_user UInt8 MATERIALIZED bitAnd(message_ptype, 0x8) > 0,
-    message_ptype_environment UInt8 MATERIALIZED bitAnd(message_ptype, 0x10) > 0,
-    message_ptype_device UInt8 MATERIALIZED bitAnd(message_ptype, 0x20) > 0,
-    message_ptype_software UInt8 MATERIALIZED bitAnd(message_ptype, 0x40) > 0,
-    message_ptype_hardware UInt8 MATERIALIZED bitAnd(message_ptype, 0x80) > 0,
+    message_object UInt16,
+    message_test_object UInt8 MATERIALIZED bitAnd(message_object, 0x1) > 0,
     message_num UInt64,
     message_stream String,
     message_time Float64,   
@@ -180,7 +167,8 @@ schema = [
         'XFail' = 7,
         'XError' = 8,
         'XNull' = 9
-    )
+    ),
+    result_test String
 ) ENGINE = MergeTree()
 PARTITION BY toYYYYMM(message_date)
 ORDER BY (test_id, message_num)"""
