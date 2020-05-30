@@ -72,9 +72,10 @@ schema = [
         '' = 0
     ),
     test_id String,
-    test_key FixedString(16) MATERIALIZED sipHash128(test_id),
+    test_key UInt64 MATERIALIZED cityHash64(test_id),
     test_parent String MATERIALIZED extract(test_id, '(.+)/.+'),
     test_top String MATERIALIZED extract(test_id, '(/[^/]+)'),
+    test_top_key UInt64 MATERIALIZED cityHash64(test_top),
     test_istop UInt8 MATERIALIZED test_parent = '',
     test_flags UInt32,
     test_cflags UInt32,
