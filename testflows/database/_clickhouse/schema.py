@@ -80,15 +80,6 @@ schema = [
     test_flags UInt32,
     test_cflags UInt32,
     test_level UInt32,
-    -- parent ids
-    project_id String,
-    user_id String,
-    environment_id String,
-    device_id String,
-    software_id String,
-    hardware_id String,
-    product_id String,
-    map_id String,
     -- test
     test_name String,
     test_uid String,
@@ -116,12 +107,6 @@ schema = [
     argument_uid String,
     -- tag
     tag_value String,
-    -- user
-    user_name String,
-    user_type String,
-    user_group String,
-    user_link String,
-    user_uid String,
     -- example
     example_row UInt32,
     example_columns Array(String),
