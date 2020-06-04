@@ -50,6 +50,8 @@ class DatabaseConnectionError(DatabaseError):
     pass
 
 class DatabaseConnection:
+    name = None
+
     def __init__(self):
         pass
     
@@ -173,9 +175,12 @@ class ColumnTypes:
 class Database:
     column_types = ColumnTypes()
 
-    def __init__(self, name, connection):
-        self.name = name
+    def __init__(self, connection):
         self.connection = connection
+
+    @property
+    def name(self):
+        return self.connection.name
 
     def table(self, name):
         raise NotImplementedError

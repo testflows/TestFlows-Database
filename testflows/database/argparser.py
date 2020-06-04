@@ -17,11 +17,11 @@ from testflows._core.cli.arg.type import key_value as key_value_type
 def argparser(parser):
     parser.add_argument("--database", dest="_database", metavar="name=value", nargs="+",
                         help="""database output handler options, default handler: 'testflows.database.clickhouse'. 
-            Options are specific to each output handler. The only required option is 'name'. 
-            For the default ClickHouse handler the following extra options can be specified:
+            Options are specific to each output handler. For the default ClickHouse handler
+            the following options can be specified:
                 'host=<hostname>'
                 'database=<database>'
                 'user=<user>'
                 'password=<password>'.
-            For example: '--database name=local host=localhost'
+            For example: '--database host=localhost'
             """, type=key_value_type, required=False)

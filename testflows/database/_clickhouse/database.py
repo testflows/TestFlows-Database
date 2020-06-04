@@ -132,6 +132,7 @@ class DatabaseConnection(DatabaseConnection):
 
     def init(self):
         self.url = f"http://{self.host}:{self.port}/"
+        self.name = f"{self.database}@{self.url}"
         self.default_params = {
             "user": self.user,
             "password": self.password,

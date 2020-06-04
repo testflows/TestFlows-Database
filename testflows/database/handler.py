@@ -16,6 +16,7 @@ import testflows.settings as settings
 
 from testflows.database.pipeline import WriteToDatabasePipeline
 from testflows.database.clickhouse import Database, DatabaseConnection
+from testflows._core.compress import CompressedFile
 
 def database_handler():
     """Handler to write output messages to database.
@@ -30,8 +31,8 @@ def database_handler():
         port=options.pop("port", 8123)
     )
 
-    database = Database(name=options.pop("name"), connection=conn)
+    database = Database(connection=conn)
 
-    with open(settings.read_logfile, "a+", buffering=1, encoding="utf-8") as log:
+    with CompressedFile(settings.read_logfile) as log:
         log.seek(0)
         WriteToDatabasePipeline(log, database, tail=True).run()
