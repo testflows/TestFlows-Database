@@ -33,6 +33,6 @@ def database_handler():
 
     database = Database(connection=conn)
 
-    with CompressedFile(settings.read_logfile) as log:
+    with CompressedFile(settings.read_logfile, tail=True) as log:
         log.seek(0)
         WriteToDatabasePipeline(log, database, tail=True).run()
