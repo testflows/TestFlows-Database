@@ -170,7 +170,7 @@ def database_object(self):
 
         with And("I create database object"):
             conn = DatabaseConnection(host="localhost", database="system")
-            self.context.database = Database("local", conn)
+            self.context.database = Database(conn)
 
     query_tests(self)
 
@@ -210,6 +210,7 @@ def database_object(self):
             By(creating_test_database)
 
             with And("creating a table that uses all the supported types"):
+                query(f"DROP TABLE IF EXISTS {table_name}")
                 query(f"CREATE TABLE {table_name} (\n"
                     + ",\n".join(["    %s %s" % (col.name, col.type) for col in columns])
                     + "\n) ENGINE = Memory()")
@@ -292,11 +293,11 @@ def database_object(self):
                 row1 = table.default_row()
                 row2 = table.default_row()
             with And("setting the same column to different values"):
-                row1["test_attributes.name"] = ["attr1"]
-                row2["test_attributes.name"] = ["attr2"]
+                row1["attribute_name"] = ["attr1"]
+                row2["attribute_name"] = ["attr2"]
             with Then("values of the column should not change"):
-                assert row1["test_attributes.name"] == "['attr1']", error()
-                assert row2["test_attributes.name"] == "['attr2']", error()
+                assert row1["attribute_name"] == '\'"attr1"\'', error()
+                assert row2["attribute_name"] == '\'"attr2"\'', error()
 
 
 @TestFeature
@@ -329,6 +330,6 @@ def database_connection_object(self):
 
 if main():
     with Module("regression"):
-        run(test=database_connection_object)
-        run(test=database_object)
+        Feature(run=database_connection_object)
+        Feature(run=database_object)
 

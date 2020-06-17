@@ -61,6 +61,7 @@ schema = [
     test_subtype Enum8 (
         'Feature' = 60,
         'Scenario' = 50,
+        'Example' = 45,
         'Background' = 40,
         'Given' = 30,
         'When' = 20,
