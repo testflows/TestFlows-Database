@@ -24,7 +24,7 @@ from testflows.asserts import error, raises
 
 def query(query, **kwargs):
     self = current()
-    with By("executing query", description=f"{query.strip()}\nwith {kwargs} options"):
+    with By("executing query", description=f"{query.strip()}\nwith {kwargs} options", format_description=False):
         if "database" in self.context:
             return self.context.database.query(query, **kwargs)
         elif "connection" in self.context:
@@ -141,7 +141,7 @@ def query_tests(self):
             assert data[-1] == {"number":"9999"}, error()
 
 @TestStep
-def creating_test_database(self):
+def create_test_database(self):
     database_name = f'test_{uuid.uuid1()}'.replace("-", "")
 
     def callback():
@@ -154,7 +154,7 @@ def creating_test_database(self):
     with By("creating database object"):
         from testflows.database.clickhouse import Database, DatabaseConnection
         conn = DatabaseConnection(host="localhost", database="default")
-        db = Database("local", conn)
+        db = Database(conn)
         self.context.database = db
 
     with And("creating a test database"):
@@ -168,7 +168,7 @@ def database_object(self):
     with Given("I import objects"):
         from testflows.database.clickhouse import Database, DatabaseConnection
 
-        with And("I create database object"):
+        with When("I create database object"):
             conn = DatabaseConnection(host="localhost", database="system")
             self.context.database = Database(conn)
 
@@ -177,7 +177,7 @@ def database_object(self):
     with Scenario("use table"):
         with When("I get table"):
             table = self.context.database.table("one")
-            with And("I get a row"):
+            with When("I get a row"):
                 row = table.default_row()
             with Then("I check the row"):
                 assert str(row) == "Row([('dummy', '0')])", error()
@@ -207,7 +207,8 @@ def database_object(self):
         ]
 
         with Given("I have a database"):
-            By(creating_test_database)
+            with By("creating test database"):
+                create_test_database()
 
             with And("creating a table that uses all the supported types"):
                 query(f"DROP TABLE IF EXISTS {table_name}")
@@ -261,7 +262,8 @@ def database_object(self):
 
     with Scenario("use schema") as self:
         with Given("I have a database"):
-            By(creating_test_database)
+            with By("creating test database"):
+                create_test_database()
 
             with And("loading schema"):
                 from testflows.database.clickhouse import schema
@@ -305,7 +307,7 @@ def database_connection_object(self):
     with Given("I import objects"):
         from testflows.database.clickhouse import DatabaseConnection
 
-        with And("I create database connection object"):
+        with When("I create database connection object"):
             self.context.connection = DatabaseConnection("localhost", "default")
 
     with Scenario("reset connection"):
