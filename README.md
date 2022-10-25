@@ -1,8 +1,5 @@
 # [TestFlows.com Open-Source Software Testing Framework] Database
 
-**The database module is still work in progress and is currently under development.
-Please use it only for reference.**
-
 Minimal module to provide capabilities to work with a database.
 
 Currently supports only Python 3.6 or above.
